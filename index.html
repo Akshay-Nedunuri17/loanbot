@@ -39,22 +39,22 @@
     <!-- Progress Steps -->
     <div class="progress-bar-wrap" id="progress-bar-wrap">
       <div class="progress-steps" id="progress-steps">
-        <div class="step-item active" id="step-income">
+        <div class="step-item active" id="step-job">
           <div class="step-dot"><span>1</span></div>
-          <div class="step-label">Income</div>
+          <div class="step-label">Occupation</div>
         </div>
         <div class="step-connector"></div>
-        <div class="step-item" id="step-job">
+        <div class="step-item" id="step-finance">
           <div class="step-dot"><span>2</span></div>
-          <div class="step-label">Job</div>
+          <div class="step-label">Finance</div>
         </div>
         <div class="step-connector"></div>
-        <div class="step-item" id="step-emi">
+        <div class="step-item" id="step-detail">
           <div class="step-dot"><span>3</span></div>
-          <div class="step-label">EMIs</div>
+          <div class="step-label">Details</div>
         </div>
         <div class="step-connector"></div>
-        <div class="step-item" id="step-expense">
+        <div class="step-item" id="step-commitments">
           <div class="step-dot"><span>4</span></div>
           <div class="step-label">Expenses</div>
         </div>
@@ -109,18 +109,13 @@
 
     <!-- Preferred Loan Amount Bar (shown during loan step) -->
     <div class="loan-amount-bar" id="loan-amount-bar" style="display:none;">
-      <div class="loan-bar-title">💰 Your preferred loan amount</div>
+      <div class="loan-bar-title">💰 Enter your loan amount &amp; purpose</div>
       <div class="loan-amount-inputs">
-        <input type="number" id="loan-amount-input" class="loan-amt-field" placeholder="e.g. 500000" min="10000" step="5000" />
-        <select id="loan-type-select" class="loan-type-sel">
-          <option value="personal">Personal Loan</option>
-          <option value="home">Home Loan</option>
-          <option value="vehicle">Car / Vehicle</option>
-          <option value="business">Business Loan</option>
-          <option value="education">Education Loan</option>
-        </select>
+        <input type="number" id="loan-amount-input" class="loan-amt-field" placeholder="Amount (e.g. 500000)" min="10000" step="5000" />
+        <input type="text" id="loan-purpose-input" class="loan-purpose-field" placeholder="Purpose (e.g. Wedding, Medical, Travel…)" maxlength="60" />
         <button id="loan-confirm-btn" class="loan-confirm-btn">Confirm →</button>
       </div>
+      <div class="purpose-chips-row" id="purpose-chips-row"></div>
     </div>
 
     <!-- Footer Input -->
