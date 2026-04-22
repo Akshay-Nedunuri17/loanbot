@@ -260,13 +260,13 @@ body {
 
 /* ===== EDIT BUTTON ON USER MESSAGES ===== */
 .msg-edit-btn {
-  background: rgba(255,255,255,0.15); border: none; border-radius: 5px;
-  color: rgba(255,255,255,0.7); font-size: 10px; padding: 2px 6px;
-  cursor: pointer; opacity: 0; transition: all 0.2s;
-  font-family: inherit;
+  background: rgba(255,255,255,0.2); border: none; border-radius: 5px;
+  color: rgba(255,255,255,0.9); font-size: 10px; padding: 2px 8px;
+  cursor: pointer; opacity: 0.7; transition: all 0.2s;
+  font-family: inherit; display: flex; align-items: center; gap: 3px;
 }
-.user-side:hover .msg-edit-btn { opacity: 1; }
-.msg-edit-btn:hover { background: rgba(255,255,255,0.25); color: white; }
+.user-side:hover .msg-edit-btn { opacity: 1; background: rgba(255,255,255,0.3); }
+.msg-edit-btn:hover { transform: scale(1.05); color: white; }
 
 /* ===== QUICK REPLY CHIPS ===== */
 .chips-row {
@@ -294,8 +294,8 @@ body {
 .loan-bar-title { font-size: 0.78rem; font-weight: 600; color: var(--text2); margin-bottom: 9px; }
 .loan-amount-inputs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-.loan-amt-field {
-  flex: 1; min-width: 110px; padding: 9px 13px;
+.loan-amt-field, .loan-tenure-field {
+  flex: 1; min-width: 90px; padding: 9px 13px;
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 10px; color: var(--text); font-family: inherit; font-size: 0.875rem;
   outline: none; transition: border-color 0.2s;

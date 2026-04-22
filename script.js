@@ -117,6 +117,7 @@
   const summaryBar    = document.getElementById("summary-bar");
   const loanAmtBar     = document.getElementById("loan-amount-bar");
   const loanAmtInput   = document.getElementById("loan-amount-input");
+  const loanTenureInput = document.getElementById("loan-tenure-input");
   const loanPurposeInput  = document.getElementById("loan-purpose-input");
   const purposeChipsRow   = document.getElementById("purpose-chips-row");
   const loanConfirm       = document.getElementById("loan-confirm-btn");
@@ -191,6 +192,7 @@
     familyIncome:  null,
     jobDetails:    null,
     loanAmount:    null,
+    tenureMonths:  null,
     loanType:      null,
     loanPurpose:   null,   // free-text custom purpose
     currentStep:   0,
@@ -334,15 +336,39 @@
 
   /* ─────────────── SUMMARY BAR ─────────────── */
   function updateSummaryBar() {
-    const occ = OCCUPATION_DATA[state.jobType] || OCCUPATION_DATA.salaried;
-    document.getElementById("sv-income").textContent = state.income != null ? fmt(state.income) : "—";
-    document.getElementById("sv-type").textContent   = state.jobType ? summariseJob(state.jobType) : "—";
-    document.getElementById("sv-emi").textContent    = state.existingEmis != null ? fmt(state.existingEmis) : "—";
-    document.getElementById("sv-exp").textContent    = state.expenses != null ? fmt(state.expenses) : "—";
-    document.getElementById("sv-amt").textContent    = state.loanAmount != null ? fmt(state.loanAmount) : "—";
+    const job = state.jobType || "salaried";
+    const occ = OCCUPATION_DATA[job] || OCCUPATION_DATA.salaried;
+    
+    // Dynamic Labels
+    document.querySelector('.summary-item:nth-child(1) .s-label').textContent = occ.financeLabel ? occ.financeLabel : "Income";
+    document.querySelector('.summary-item:nth-child(2) .s-label').textContent = "Occupation";
+    document.querySelector('.summary-item:nth-child(3) .s-label').textContent = "Current EMIs";
+    document.querySelector('.summary-item:nth-child(4) .s-label').textContent = "Fixed Exp.";
+    document.querySelector('.summary-item:nth-child(5) .s-label').textContent = "Loan Ask";
+
+    // Dynamic Values
+    const incomeVal = (state.jobType === "student" && state.income === 0) ? state.familyIncome : state.income;
+    updateBox("sv-income", incomeVal != null ? fmt(incomeVal) : "—");
+    updateBox("sv-type", state.jobType ? summariseJob(state.jobType) : "—");
+    updateBox("sv-emi", state.existingEmis != null ? fmt(state.existingEmis) : "—");
+    updateBox("sv-exp", state.expenses != null ? fmt(state.expenses) : "—");
+    updateBox("sv-amt", state.loanAmount != null ? fmt(state.loanAmount) : "—");
 
     const hasAny = state.income || state.jobType || state.existingEmis != null || state.expenses;
     summaryBar.style.display = hasAny ? "flex" : "none";
+  }
+
+  function updateBox(id, newVal) {
+    const el = document.getElementById(id);
+    if (el.textContent !== newVal && newVal !== "—") {
+      el.textContent = newVal;
+      const parent = el.closest(".summary-item");
+      parent.classList.remove("updated");
+      void parent.offsetWidth; // trigger reflow
+      parent.classList.add("updated");
+    } else {
+      el.textContent = newVal;
+    }
   }
 
   function summariseJob(type) {
@@ -490,7 +516,8 @@
     const emis = state.existingEmis || 0, expenses = state.expenses || 0;
     const loanType = state.loanType || "personal";
     const rate = (RATES[loanType] || RATES.personal)[jobType] || (RATES[loanType] || RATES.personal).default;
-    const tenureMonths = TENURE[loanType] || 60, r = rate / 100 / 12;
+    const tenureMonths = state.tenureMonths || TENURE[loanType] || 60;
+    const r = rate / 100 / 12;
     
     const disposable = monthlyIncome - expenses - emis;
     const maxNewEmi = Math.min(monthlyIncome * 0.45, Math.max(0, disposable * 0.75));
@@ -587,7 +614,9 @@
             <span class="fin-bento-val" style="color:${feasibility === "infeasible" ? "var(--accent-rose)" : "var(--accent-cyan)"}">${ fmt(state.loanAmount)}</span>
           </div>
           <div class="fin-bento-item"><span class="fin-bento-label">Monthly EMI</span><span class="fin-bento-val" style="color:var(--accent-cyan)">${fmt(reqEmi)}/mo</span></div>
-          <div class="fin-bento-item"><span class="fin-bento-label">Rate &amp; Tenure</span><span class="fin-bento-val">${rate}% @ ${tenureYrs}y</span></div>
+          <div class="fin-bento-item"><span class="fin-bento-label">Completion Time</span><span class="fin-bento-val">${tenureMonths} Months (${tenureYrs}y)</span></div>
+          <div class="fin-bento-item"><span class="fin-bento-label">Interest Rate</span><span class="fin-bento-val">${rate}% p.a.</span></div>
+          <div class="fin-bento-item"><span class="fin-bento-label">Total Repayment</span><span class="fin-bento-val" style="color:var(--accent-emerald)">${fmt(Math.round(reqTotalPaid))}</span></div>
         </div>
       </div>
 
@@ -719,6 +748,7 @@
       chatBody.style.display = "block";
       loanAmtBar.style.display = "block";
       loanAmtInput.value   = state.loanAmount || "";
+      loanTenureInput.value = state.tenureMonths || "";
       loanPurposeInput.value = state.loanPurpose || "";
       state.flowComplete = false;
       state.resultShown  = false;
@@ -765,6 +795,7 @@
       userInput.disabled = true; sendBtn.disabled = true;
       loanPurposeInput.value = "";
       loanAmtInput.value = "";
+      loanTenureInput.value = state.loanType ? (TENURE[state.loanType] || 60) : 60;
       // Populate purpose suggestion chips
       purposeChipsRow.innerHTML = "";
       PURPOSE_CHIPS.forEach(label => {
@@ -840,18 +871,23 @@
   }
 
   loanConfirm.addEventListener("click", async () => {
-    const rawAmt   = parseFloat(loanAmtInput.value);
-    const purpose  = loanPurposeInput.value.trim();
+    const rawAmt    = parseFloat(loanAmtInput.value);
+    const rawTenure = parseInt(loanTenureInput.value);
+    const purpose   = loanPurposeInput.value.trim();
     if (!rawAmt || rawAmt < 10000) { loanAmtInput.style.borderColor = "#ff4444"; loanAmtInput.focus(); return; }
+    if (!rawTenure || rawTenure < 3 || rawTenure > 480) { loanTenureInput.style.borderColor = "#ff4444"; loanTenureInput.focus(); return; }
     if (!purpose) { loanPurposeInput.style.borderColor = "#ff4444"; loanPurposeInput.focus(); return; }
     loanAmtInput.style.borderColor = "";
+    loanTenureInput.style.borderColor = "";
     loanPurposeInput.style.borderColor = "";
-    state.loanAmount  = rawAmt;
-    state.loanPurpose = purpose;
-    state.loanType    = inferLoanType(purpose);   // derive rate key automatically
+    state.loanAmount   = rawAmt;
+    state.tenureMonths = rawTenure;
+    state.loanPurpose  = purpose;
+    state.loanType     = inferLoanType(purpose);
     state.flowComplete = true;
     loanAmtBar.style.display = "none";
-    addUserMessage(`Amount: ${fmt(rawAmt)} | Purpose: ${purpose}`);
+    const confirmMsg = addUserMessage(`Amount: ${fmt(rawAmt)} | Tenure: ${rawTenure} Months | Purpose: ${purpose}`);
+    confirmMsg.dataset.stepIndex = FLOW_STEPS.length - 1;
     state.currentStep = FLOW_STEPS.length;
     updateProgressSteps(); updateSummaryBar();
     showTyping(); await delay(1200); removeTyping();
